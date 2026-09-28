@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Meteor Fake Client 恶搞面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Consolas,monospace}
+body{background:#0b0b0b;color:#39ff14;padding:15px;line-height:1.6}
+h1{color:#ff3344;margin-bottom:10px;font-size:22px}
+.subtitle{color:#aaa;margin-bottom:20px;font-size:14px}
+.panel{border:1px solid #39ff14;padding:16px;border-radius:6px;max-width:600px;margin: 0 auto;}
+.opt{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222}
+button{background:#111;color:#39ff14;border:1px solid #39ff14;padding:6px 12px;border-radius:3px;cursor:pointer}
+button.on{background:#39ff14;color:#000}
+button:disabled{
+  border-color:#444;
+  color:#666;
+  cursor:not-allowed;
+}
+#injectBtn{
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+  font-size:16px;
+  font-weight:bold;
+}
+#injectBtn.running{
+  background:#39ff14;
+  color:#000;
+}
+#resetBtn{
+  width:100%;
+  margin:8px 0;
+  padding:8px;
+  border-color:#ff4444;
+  color:#ff4444;
+}
+.log{margin-top:15px;padding:10px;background:#000;border:1px solid #222;height:160px;overflow-y:auto;font-size:13px;color:#88ff88}
+/* 弹窗样式 */
+.popup{
+  display:none;
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  background:#111;
+  border:2px solid red;
+  color:red;
+  padding:20px;
+  z-index:999;
+}
+.shake{
+  animation: shake 0.1s infinite;
+}
+@keyframes shake{
+  0%{transform: translateX(2px)}
+  50%{transform: translateX(-2px)}
+  100%{transform: translateX(2px)}
+}
+.warning-flash{
+  animation: flash 0.6s infinite;
+}
+@keyframes flash{
+  0%{border-color:#ff2222}
+  50%{border-color:#000000}
+}
+.progressBar{
+  width:100%;
+  height:12px;
+  background:#222;
+  margin:8px 0;
+  border-radius:4px;
+  overflow:hidden;
+}
+#progress{
+  height:100%;
+  width:0%;
+  background:#39ff14;
+  transition:0.1s;
+}
+</style>
+</head>
+<body>
+<div class="panel" id="mainPanel">
+    <h1>METEOR CLIENT 【FAKE】</h1>
+    <div class="subtitle">仅录视频恶搞，无真实注入功能</div>
+
+    <button id="injectBtn" onclick="startInject()">开始注入</button>
+    <div class="progressBar">
+      <div id="progress"></div>
+    </div>
+    <button id="resetBtn" onclick="resetAll()">重置全部</button>
+
+    <div class="opt">
+        <span>✅Fly 飞行</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+    <div class="opt">
+        <span>✅X-Ray 矿透</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+    <div class="opt">
+        <span>✅ItemDupe 物品复制</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+    <div class="opt">
+        <span>✅KillAura 杀戮光环</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+    <div class="opt">
+        <span>✅Speed 疾跑</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+    <div class="opt">
+        <span>✅AutoClicker 自动点击</span>
+        <button class="moduleBtn" onclick="toggle(this)">OFF</button>
+    </div>
+
+    <div class="log" id="log">
+> 客户端加载完成<br>
+> 等待点击【开始注入】
+    </div>
+</div>
+
+<div class="popup" id="alertPop">
+  ⚠️警告：检测到服务端反作弊系统！
+  <br><br>
+  <button onclick="closePop()">忽略</button>
+</div>
+
+<script>
+let injected = false;
+function startInject(){
+  if(injected) return;
+  injected = true;
+  const btn = document.getElementById("injectBtn");
+  btn.innerText = "注入中...";
+  btn.disabled = true;
+  const progress = document.getElementById("progress");
+  let p = 0;
+  const taskList = [
+    "正在寻找游戏进程...",
+    "读取内存模块...",
+    "绕过基础校验...",
+    "注入核心模块...",
+    "加载Anarchy模组包...",
+    "注入完成！"
+  ];
+  let idx = 0;
+  addLog(`> ${taskList[idx]}`);
+  const timer = setInterval(()=>{
+    p += 12;
+    progress.style.width = p+"%";
+    idx++;
+    if(idx < taskList.length){
+      addLog(`> ${taskList[idx]}`);
+    }
+    if(p >= 100){
+      clearInterval(timer);
+      btn.innerText = "注入成功";
+      btn.classList.add("running");
+      addLog("> ===== 客户端就绪，可以开启模块 =====");
+    }
+  },350)
+}
+
+function toggle(btn){
+    if(!injected){
+      addLog("> 错误：请先注入客户端！");
+      return;
+    }
+    // 只有 从OFF点到ON【开启模块】的时候才判定概率
+    if(btn.innerText === "OFF"){
+        btn.innerText="ON";
+        btn.classList.add("on");
+        const name = btn.parentElement.querySelector("span").innerText.split(" ")[1];
+        addLog(`> 模块【${name}】已启用`);
+        // ✅每次开启模块都会随机判定，没有一次性限制
+        if(Math.random() < 0.15){
+          showPop();
+        }
+    }else{
+        btn.innerText="OFF";
+        btn.classList.remove("on");
+        addLog(`> 模块关闭`);
+    }
+}
+function addLog(text){
+    const logDom = document.getElementById("log");
+    logDom.innerHTML += text + "<br>";
+    logDom.scrollTop = logDom.scrollHeight;
+}
+function showPop(){
+  const pop = document.getElementById("alertPop");
+  pop.style.display = "block";
+  document.getElementById("mainPanel").classList.add("shake","warning-flash");
+}
+function closePop(){
+  const pop = document.getElementById("alertPop");
+  pop.style.display = "none";
+  document.getElementById("mainPanel").classList.remove("shake","warning-flash");
+  addLog("> ❗反作弊拦截，所有模块强制关闭，客户端锁定");
+  // 全部模块强制切OFF
+  document.querySelectorAll(".moduleBtn").forEach(b=>{
+    b.innerText="OFF";
+    b.classList.remove("on");
+    b.disabled = true; // 模块按钮禁用
+  })
+  document.getElementById("injectBtn").disabled = true; //注入按钮禁用
+}
+// 重置全部，恢复所有功能
+function resetAll(){
+  injected = false;
+  const injectBtn = document.getElementById("injectBtn");
+  injectBtn.innerText = "开始注入";
+  injectBtn.disabled = false;
+  injectBtn.classList.remove("running");
+  document.getElementById("progress").style.width = "0%";
+  // 全部模块切回OFF，解除禁用
+  document.querySelectorAll(".moduleBtn").forEach(b=>{
+    b.innerText="OFF";
+    b.classList.remove("on");
+    b.disabled = false;
+  })
+  // 清空日志
+  const logDom = document.getElementById("log");
+  logDom.innerHTML = "> 客户端加载完成<br>> 等待点击【开始注入】";
+  // 关闭弹窗，清除动画
+  document.getElementById("alertPop").style.display="none";
+  document.getElementById("mainPanel").classList.remove("shake","warning-flash");
+}
+</script>
+</body>
+</html>
